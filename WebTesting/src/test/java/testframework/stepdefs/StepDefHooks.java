@@ -43,12 +43,36 @@ public class StepDefHooks extends StepDefsSuper{
 
         //close ads
         if (webDriver.getCurrentUrl().contains("google")) {
-            List<WebElement> elements = webDriver.findElements(By.id("dismiss-button"));
-            elements.forEach(WebElement::click);
+            List<WebElement> iframes = webDriver.findElements(By.tagName("iframe"));
 
+            try {
+                for (WebElement iframe : iframes){
+                    try {
+                        webDriver.switchTo().frame(iframe);
+                        List<WebElement> nestedIframes = webDriver.findElements(By.tagName("iframe"));
+
+                        if (!nestedIframes.isEmpty()){
+                            webDriver.switchTo().frame(nestedIframes.get(0));
+                            try {
+                                WebElement closeButton = webDriver.findElement(By.id("dismiss-button"));
+                                closeButton.click();
+                                break;
+                            } catch (Exception e){
+                                System.out.println("Close button not found");
+                            }
+                            webDriver.switchTo().parentFrame();
+                        }
+                        webDriver.switchTo().defaultContent();
+                    } catch (Exception e) {
+                        System.out.println("error switching to Iframe: " + e.getMessage());
+                        webDriver.switchTo().defaultContent();
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("ad not found or other error: " + e.getMessage());
+            }
+            webDriver.switchTo().defaultContent();
         }
-
-
         //An attempt to close popup ads
 //        if (webDriver.getCurrentUrl().contains("google")) {
 //            try {
